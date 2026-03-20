@@ -63,7 +63,7 @@ After every correction or mistake, update this CLAUDE.md with a rule to prevent 
 
 <!-- CLAUDE-SETUP Add mistakes Claude makes so it learns -->
 
-- Don't use `any` type in TypeScript without explicit approval
+- Don't use `Any` type hint in Python without an explanatory comment
 - Don't skip error handling
 - Don't commit without running tests first
 - Don't make breaking API changes without discussion

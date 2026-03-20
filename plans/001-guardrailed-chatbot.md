@@ -436,9 +436,22 @@ These guide every design decision:
    scenario config loading. Fill in `docs/commands.md` with real commands.
    Update `docs/conventions/code.md` and `CLAUDE.md` to replace TypeScript
    conventions with Python equivalents (type hints, ruff, mypy, pydantic).
+   **Deferred from step 1 review:**
+   - `__main__.py` uses sync `input()` inside async — replace with
+     `asyncio.get_event_loop().run_in_executor(None, input, "You: ")` before
+     the conversation manager lands
+   - `load_scenario()` passes raw YAML dict to pydantic without catching
+     `ValidationError` — wrap in `try/except ValidationError` and re-raise as
+     `ValueError` with scenario name and file path for better debugging
+
 2. Conversation manager: multi-round chat with turn/token limits
 3. System prompt: design and inject with canary tokens, scenario-driven personas
 4. Input pipeline: schema validation → regex blocklist → PII scrubbing
+   **Add to pyproject.toml before starting:** `presidio-analyzer`,
+   `presidio-anonymizer`. Also revisit `brand_marketing.yaml` blocklist —
+   adjective terms ("competitor", "defamatory", "political") may not behave
+   as expected depending on whether blocklist matching is substring or exact;
+   decide and document the matching strategy.
 5. Output pipeline: schema validation → canary detection → keyword/regex
    blocklist (same patterns as input pipeline) → retry loop with validation
    feedback (include failure reason in retry prompt, same model, return safe
@@ -447,6 +460,7 @@ These guide every design decision:
 7. Prompt injection detection: implement `PromptInjectionDetector` protocol with
    both custom embedding-based classifier and `llm-guard` as config options.
    Both must pass the same adversarial test suite.
+   **Add to pyproject.toml before starting:** `llm-guard`.
 8. Intent and tool routing
 9. Confidence scoring (regex patterns for hedging language — "I think",
    "probably", "I'm not sure" — as primary signal, optional LLM judge as
@@ -456,4 +470,5 @@ These guide every design decision:
 12. Semantic rate limiting: `sentence-transformers/all-MiniLM-L6-v2`, cosine
     similarity threshold 0.85, per-session in-memory store of last 10 denied
     inputs. Tune threshold empirically against adversarial test suite.
-13. Terminal UI: `textual` TUI as presentation layer over the pipeline
+13. Terminal UI: `textual` TUI as presentation layer over the pipeline.
+    **Add to pyproject.toml before starting:** `textual`.
