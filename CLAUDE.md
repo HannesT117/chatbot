@@ -17,6 +17,17 @@ the trade-offs between safety, latency, and user experience.
 4. Lint before committing
 5. Before creating PR: run full lint and test suite
 
+## Step Review and Commit Protocol
+
+After completing each implementation step, run a full review before asking the user:
+
+1. **Verify** — run the `superpowers:verification-before-completion` skill (typecheck, tests, lint, confirm output matches plan)
+2. **Code review** — dispatch the `superpowers:code-reviewer` subagent to check against the plan and coding standards
+3. **QA** — dispatch the `qa` subagent to verify behaviour and edge cases
+4. **Simplify** — invoke the `code-simplifier` skill to remove unnecessary complexity
+5. **Present to user** — summarise what was built and the review findings, then ask for approval
+6. **Commit only after explicit user approval** — never commit speculatively
+
 ## Code Style & Conventions
 
 ## Commands Reference
