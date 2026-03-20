@@ -1,28 +1,42 @@
-# claude template
+# LLM guardrails testbed
 
-This repository contains a few claude configurations that I find helpful or want to try.
+This project is a testing ground for best practices around securing LLM
+application output. It explores techniques for ensuring that AI-generated
+responses are correct, compliant, and appropriate — covering regulated
+industries like financial services, as well as brand-sensitive contexts
+like advertising.
 
-My local setup and decision flow for when to use which model is described in the [docs](docs/local-setup.md).
+## What this project covers
 
-## Getting started
+Modern LLM deployments face a common challenge: the model may produce output
+that is factually wrong, legally non-compliant, or inconsistent with required
+tone and brand guidelines. This project experiments with guardrail strategies
+that address these risks in production environments.
 
-1. Create a new repository with this template: `gh repo create <my-project> -p HannesT117/claude-template -l MIT --public -c`
+The two primary use cases driving this work are:
 
-2. Search for occurences of `CLAUDE_SETUP` and add project specific information.
+- **Regulated environments (financial services):** Responses must be accurate,
+  compliant with applicable regulations, and appropriate for the customer
+  receiving them. Incorrect or misleading financial guidance carries real legal
+  and reputational risk.
+- **Brand-controlled environments (advertising):** Responses must adhere to
+  brand language, tone of voice, and messaging guidelines. Output that conflicts
+  with brand standards or causes reputational harm is unacceptable.
 
-3. Check the plugins in [.claude/settings.json](.claude/settings.json) for unnecessary plugins and remove them.
+## Guardrail approaches
 
-## Remarks
+This testbed evaluates multiple layers of output control, including:
 
-### Update Claude.md regularly
+- Input validation and prompt hardening
+- Output filtering and post-processing
+- Structured output constraints (schemas, enumerations)
+- Retrieval-augmented generation (RAG) for grounding responses in verified
+  source material
+- LLM-as-judge patterns for automated output evaluation
+- Human-in-the-loop review checkpoints
 
-End corrections with: "Now update CLAUDE.md so you don't make that mistake again."
+## Goals
 
-Keep iterating until the mistake rate measurably drops.
-
-## Sources and Inspiration
-
-- [Boris Cherny's Claude Config](https://github.com/0xquinto/bcherny-claude/)
-- [SkillsMP, Marketplace for AI agent skills](https://skillsmp.com/)
-- [Which Agent, helper to figure out which tool to use](https://hannest117.github.io/which-agent/)
-- [llmfit, find the best llm for your machine](https://github.com/AlexsJones/llmfit)
+The goal is not to build a production chatbot, but to identify which guardrail
+combinations are reliable enough for high-stakes environments — and to document
+the trade-offs between safety, latency, and user experience.

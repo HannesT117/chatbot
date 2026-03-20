@@ -1,8 +1,13 @@
 # CLAUDE.md - Project Instructions for Claude Code
 
-## Project Overview
+## Project overview
 
-<!-- CLAUDE_SETUP Customize this section for your project -->
+This project is a testing ground for LLM output guardrails. It evaluates
+techniques for ensuring AI-generated responses are correct, compliant, and
+appropriate — targeting regulated environments (financial services) and
+brand-sensitive contexts (advertising). The goal is to identify which guardrail
+combinations are reliable enough for high-stakes production use, and to document
+the trade-offs between safety, latency, and user experience.
 
 ## Development Workflow
 
@@ -36,6 +41,12 @@ After every correction or mistake, update this CLAUDE.md with a rule to prevent 
 - When working in parallel, only one agent should edit a given file at a time
 - For fully parallel workstreams, use git worktrees:
   `git worktree add .claude/worktrees/<name> origin/main`
+
+## Commit message format
+
+- Write the subject line as a short imperative sentence (max 72 chars)
+- Write the body as bullet points, not prose paragraphs
+- Each bullet describes one logical change and why it was made
 
 ## Things Claude Should NOT Do
 
