@@ -1,1 +1,1 @@
-"""Conversation tracking — metrics and guardrail event recording."""
+"""Stateful attack tracking and circuit breakers — implemented in stage 11."""

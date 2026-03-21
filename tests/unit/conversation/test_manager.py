@@ -14,7 +14,6 @@ from chatbot.config import ScenarioConfig
 from chatbot.conversation.manager import ConversationManager, LLMError, TurnLimitExceeded
 from chatbot.conversation.session import Session
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -67,9 +66,10 @@ async def test_no_llm_call_on_turn_limit(
 ) -> None:
     for i in range(3):
         session.add_turn(f"u{i}", f"a{i}")
-    with patch("litellm.acompletion", new=AsyncMock()) as mock_llm:
-        with pytest.raises(TurnLimitExceeded):
-            await manager.chat(session, "one more")
+    with patch("litellm.acompletion", new=AsyncMock()) as mock_llm, pytest.raises(
+        TurnLimitExceeded
+    ):
+        await manager.chat(session, "one more")
     mock_llm.assert_not_called()
 
 
@@ -157,6 +157,5 @@ async def test_llm_error_raised_on_failure(
 ) -> None:
     with patch(
         "litellm.acompletion", new=AsyncMock(side_effect=RuntimeError("API down"))
-    ):
-        with pytest.raises(LLMError):
-            await manager.chat(session, "hi")
+    ), pytest.raises(LLMError):
+        await manager.chat(session, "hi")
