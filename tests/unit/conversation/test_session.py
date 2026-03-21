@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from chatbot.conversation.session import Session
 
 
@@ -86,9 +88,6 @@ def test_to_messages_pending_user_after_history() -> None:
     assert msgs[-1] == {"role": "user", "content": "c"}
 
 
-from unittest.mock import patch
-
-
 def test_trim_drops_oldest_turn() -> None:
     session = Session.new()
     session.add_turn("old question", "old answer")
@@ -141,3 +140,18 @@ def test_trim_does_nothing_when_within_budget() -> None:
     msgs = session.to_messages("sys")
     turn_messages = [m for m in msgs if m["role"] in ("user", "assistant")]
     assert len(turn_messages) == 4  # both turns still present
+
+
+def test_trim_logs_warning_when_system_prompt_alone_exceeds_budget() -> None:
+    session = Session.new()
+    with (
+        patch("chatbot.conversation.session.litellm.token_counter", return_value=9999),
+        patch("chatbot.conversation.session.structlog.get_logger") as mock_get_logger,
+    ):
+        mock_log = mock_get_logger.return_value
+        session.trim_to_budget("gpt-4o-mini", 100, "sys", "pending")
+        mock_log.warning.assert_called_once_with(
+            "system_prompt_exceeds_token_budget",
+            token_count=9999,
+            max_tokens=100,
+        )
