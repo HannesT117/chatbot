@@ -61,6 +61,9 @@ class ConversationManager:
         except Exception as exc:
             raise LLMError(str(exc)) from exc
 
-        response_text: str = response.choices[0].message.content
+        raw = response.choices[0].message.content
+        if raw is None:
+            raise LLMError("LLM returned no text content (content=None).")
+        response_text: str = raw
         session.add_turn(user_input, response_text)
         return response_text

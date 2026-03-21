@@ -67,7 +67,7 @@ async def test_no_llm_call_on_turn_limit(
 ) -> None:
     for i in range(3):
         session.add_turn(f"u{i}", f"a{i}")
-    with patch("litellm.acompletion") as mock_llm:
+    with patch("litellm.acompletion", new=AsyncMock()) as mock_llm:
         with pytest.raises(TurnLimitExceeded):
             await manager.chat(session, "one more")
     mock_llm.assert_not_called()
@@ -118,7 +118,7 @@ async def test_system_prompt_contains_canary(
 ) -> None:
     captured: list[list[dict[str, str]]] = []
 
-    async def capture_call(**kwargs: Any) -> MagicMock:
+    async def capture_call(**kwargs: Any) -> MagicMock:  # Any: litellm kwargs are untyped
         captured.append(kwargs["messages"])
         return _mock_completion("ok")
 
@@ -135,7 +135,7 @@ async def test_canary_only_in_system_message(
 ) -> None:
     captured: list[list[dict[str, str]]] = []
 
-    async def capture_call(**kwargs: Any) -> MagicMock:
+    async def capture_call(**kwargs: Any) -> MagicMock:  # Any: litellm kwargs are untyped
         captured.append(kwargs["messages"])
         return _mock_completion("ok")
 
