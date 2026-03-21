@@ -27,6 +27,8 @@ class Session:
         self._session_id = session_id
         self._canary_token = canary_token
         self._turns: list[Turn] = []
+        # _turn_count intentionally diverges from len(_turns) after trim_to_budget()
+        # drops old turns — it records the total turns taken, never decrements.
         self._turn_count: int = 0
 
     @classmethod
