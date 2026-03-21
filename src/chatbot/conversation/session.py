@@ -51,3 +51,25 @@ class Session:
     def turn_count(self) -> int:
         """Total turns taken in this session, including trimmed ones."""
         return self._turn_count
+
+    def add_turn(self, user: str, assistant: str) -> None:
+        """Record a completed exchange and increment the turn counter."""
+        self._turns.append(Turn(user=user, assistant=assistant))
+        self._turn_count += 1
+
+    def to_messages(
+        self, system_prompt: str, pending_user: str | None = None
+    ) -> list[dict[str, str]]:
+        """Build an OpenAI-format message list from the current history.
+
+        The system prompt is always first. Historical turns follow in order.
+        If *pending_user* is provided it is appended as a final user message,
+        allowing the caller to include the current (not yet recorded) input.
+        """
+        messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
+        for turn in self._turns:
+            messages.append({"role": "user", "content": turn.user})
+            messages.append({"role": "assistant", "content": turn.assistant})
+        if pending_user is not None:
+            messages.append({"role": "user", "content": pending_user})
+        return messages
