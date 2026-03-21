@@ -84,3 +84,60 @@ def test_to_messages_pending_user_after_history() -> None:
     # system + user + assistant + pending user
     assert len(msgs) == 4
     assert msgs[-1] == {"role": "user", "content": "c"}
+
+
+from unittest.mock import patch
+
+
+def test_trim_drops_oldest_turn() -> None:
+    session = Session.new()
+    session.add_turn("old question", "old answer")
+    session.add_turn("new question", "new answer")
+
+    def fake_counter(model: str, messages: list[dict[str, str]]) -> int:
+        user_messages = [m for m in messages if m["role"] == "user"]
+        return 999 if len(user_messages) > 2 else 10
+
+    with patch("chatbot.conversation.session.litellm.token_counter", side_effect=fake_counter):
+        session.trim_to_budget("gpt-4o-mini", 50, "sys", "pending")
+
+    msgs = session.to_messages("sys")
+    contents = [m["content"] for m in msgs]
+    assert "new question" in contents
+    assert "old question" not in contents
+
+
+def test_trim_preserves_turn_count() -> None:
+    session = Session.new()
+    session.add_turn("hello", "hi")
+    session.add_turn("bye", "goodbye")
+    assert session.turn_count == 2
+
+    # Always over budget — will trim everything
+    with patch("chatbot.conversation.session.litellm.token_counter", return_value=9999):
+        session.trim_to_budget("gpt-4o-mini", 100, "sys", "pending")
+
+    # turn_count must not decrement
+    assert session.turn_count == 2
+    # history should be empty
+    assert session.to_messages("sys") == [{"role": "system", "content": "sys"}]
+
+
+def test_trim_empty_turns_is_safe() -> None:
+    session = Session.new()
+    with patch("chatbot.conversation.session.litellm.token_counter", return_value=9999):
+        session.trim_to_budget("gpt-4o-mini", 100, "sys", "pending")
+    assert session.turn_count == 0
+
+
+def test_trim_does_nothing_when_within_budget() -> None:
+    session = Session.new()
+    session.add_turn("a", "b")
+    session.add_turn("c", "d")
+
+    with patch("chatbot.conversation.session.litellm.token_counter", return_value=10):
+        session.trim_to_budget("gpt-4o-mini", 100, "sys", "pending")
+
+    msgs = session.to_messages("sys")
+    turn_messages = [m for m in msgs if m["role"] in ("user", "assistant")]
+    assert len(turn_messages) == 4  # both turns still present

@@ -6,6 +6,9 @@ import secrets
 import uuid
 from dataclasses import dataclass
 
+import litellm
+import structlog
+
 
 @dataclass(frozen=True)
 class Turn:
@@ -75,3 +78,34 @@ class Session:
         if pending_user is not None:
             messages.append({"role": "user", "content": pending_user})
         return messages
+
+    def trim_to_budget(
+        self, model: str, max_tokens: int, system_prompt: str, pending_user: str
+    ) -> None:
+        """Drop oldest turns until the full message list fits within max_tokens.
+
+        Uses litellm.token_counter to measure token usage including the pending
+        user message. turn_count is never decremented — it records total turns
+        taken in this session, not the current window size.
+
+        If even an empty history (system prompt + pending user alone) exceeds
+        max_tokens, logs a warning and proceeds — the provider will surface a
+        context-length error which manager.py catches as LLMError.
+        """
+        log = structlog.get_logger()
+
+        while self._turns:
+            messages = self.to_messages(system_prompt, pending_user)
+            if litellm.token_counter(model=model, messages=messages) <= max_tokens:
+                return
+            self._turns.pop(0)
+
+        # _turns is empty; check once whether the system prompt alone exceeds budget
+        messages = self.to_messages(system_prompt, pending_user)
+        token_count = litellm.token_counter(model=model, messages=messages)
+        if token_count > max_tokens:
+            log.warning(
+                "system_prompt_exceeds_token_budget",
+                token_count=token_count,
+                max_tokens=max_tokens,
+            )
