@@ -3,41 +3,41 @@
 ## Run Dev
 
 ```sh
-echo "CLAUDE_SETUP not finished"
-```
-
-## Clean Build
-
-```sh
-# Remove previous build artifacts
-echo "CLAUDE_SETUP not finished"
-# Install Dependencies
-echo "CLAUDE_SETUP not finished"
-# Build
-echo "CLAUDE_SETUP not finished"
+uv run python -m chatbot
 ```
 
 ## Test
 
 ```sh
-echo "CLAUDE_SETUP not finished"
+uv run pytest tests/unit/
+```
+
+## Test (all, including integration)
+
+```sh
+CHATBOT_LIVE_TESTS=1 uv run pytest
 ```
 
 ## Typecheck
 
 ```sh
-echo "CLAUDE_SETUP not finished"
+uv run mypy src/
 ```
 
-### 3. Linting
+## Lint
 
 ```sh
-echo "CLAUDE_SETUP not finished"
+uv run ruff check src/ tests/
 ```
 
-## Debugging
+## Format
 
 ```sh
-# Start debugger / inspect process
-echo "CLAUDE_SETUP not finished"
+uv run ruff format src/ tests/
+```
+
+## Clean Build
+
+```sh
+uv sync --reinstall
 ```
