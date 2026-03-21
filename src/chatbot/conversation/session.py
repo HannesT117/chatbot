@@ -24,8 +24,8 @@ class Session:
     """
 
     def __init__(self, session_id: str, canary_token: str) -> None:
-        self.session_id = session_id
-        self.canary_token = canary_token
+        self._session_id = session_id
+        self._canary_token = canary_token
         self._turns: list[Turn] = []
         self._turn_count: int = 0
 
@@ -36,6 +36,16 @@ class Session:
             session_id=uuid.uuid4().hex,
             canary_token=secrets.token_hex(16),
         )
+
+    @property
+    def session_id(self) -> str:
+        """Unique session identifier, set at construction."""
+        return self._session_id
+
+    @property
+    def canary_token(self) -> str:
+        """Security canary token, set at construction."""
+        return self._canary_token
 
     @property
     def turn_count(self) -> int:
