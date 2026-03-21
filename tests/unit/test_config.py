@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from chatbot.config import ScenarioConfig, load_scenario
+from chatbot.config import ScenarioConfig, load_model, load_scenario
 
 # ---------------------------------------------------------------------------
 # Loading each scenario by name
@@ -103,3 +103,40 @@ def test_error_message_lists_available_scenarios() -> None:
     msg = str(exc_info.value)
     # Should mention at least one real scenario to help the user
     assert "financial_advisor" in msg or "Available scenarios" in msg
+
+
+# ---------------------------------------------------------------------------
+# Max turns and token budget
+# ---------------------------------------------------------------------------
+
+
+def test_scenario_has_max_turns() -> None:
+    cfg = load_scenario("financial_advisor")
+    assert cfg.max_turns == 20
+
+
+def test_scenario_has_token_budget() -> None:
+    cfg = load_scenario("financial_advisor")
+    assert cfg.token_budget == 4000
+
+
+@pytest.mark.parametrize("name", ["financial_advisor", "brand_marketing", "insurance_claims"])
+def test_all_scenarios_have_limits(name: str) -> None:
+    cfg = load_scenario(name)
+    assert cfg.max_turns > 0
+    assert cfg.token_budget > 0
+
+
+# ---------------------------------------------------------------------------
+# Model loading
+# ---------------------------------------------------------------------------
+
+
+def test_load_model_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CHATBOT_MODEL", raising=False)
+    assert load_model() == "gpt-4o-mini"
+
+
+def test_load_model_reads_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CHATBOT_MODEL", "claude-haiku-4-5-20251001")
+    assert load_model() == "claude-haiku-4-5-20251001"

@@ -4,6 +4,8 @@ persona_description: >-
   Sage is an upbeat, creative marketing assistant for a premium outdoor apparel
   brand called Ridgeline. Speaks with enthusiasm about the outdoors,
   sustainability, and adventure. Stays relentlessly on-brand.
+max_turns: 30
+token_budget: 6000
 allowed_intents:
   - product_description
   - campaign_copy
