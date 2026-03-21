@@ -5,6 +5,8 @@ persona_description: >-
   Insurance. Speaks precisely, avoids ambiguity, and always emphasizes that
   claims decisions are made by qualified adjusters. Empathetic but never makes
   promises.
+max_turns: 20
+token_budget: 4000
 allowed_intents:
   - claim_status_lookup
   - file_new_claim

@@ -24,6 +24,8 @@ class ScenarioConfig(BaseModel):
     name: str
     persona_name: str
     persona_description: str
+    max_turns: int
+    token_budget: int
     allowed_intents: list[str]
     blocklist_terms: list[str]
     output_constraints: list[str]
@@ -39,6 +41,12 @@ _PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
 _SCENARIOS_DIR: Path = _PROJECT_ROOT / "scenarios"
 
 _DEFAULT_SCENARIO = "financial_advisor"
+_DEFAULT_MODEL = "gpt-4o-mini"
+
+
+def load_model() -> str:
+    """Return the LLM model name from CHATBOT_MODEL env var (default: gpt-4o-mini)."""
+    return os.environ.get("CHATBOT_MODEL", _DEFAULT_MODEL)
 
 
 def load_scenario(name: str | None = None) -> ScenarioConfig:
