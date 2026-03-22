@@ -6,7 +6,9 @@ import (
 	"os"
 
 	"chatbot/server/internal/api"
+	"chatbot/server/internal/llm"
 	"chatbot/server/internal/scenario"
+	"chatbot/server/internal/session"
 )
 
 // config holds runtime configuration read from environment variables.
@@ -31,6 +33,10 @@ func main() {
 
 	cfg := configFromEnv()
 
+	if cfg.OpenAIAPIKey == "" {
+		logger.Warn("OPENAI_API_KEY is not set; LLM calls will fail")
+	}
+
 	scenarios, err := scenario.LoadAll()
 	if err != nil {
 		logger.Error("failed to load scenarios", "error", err)
@@ -38,14 +44,21 @@ func main() {
 	}
 	logger.Info("scenarios loaded", "count", len(scenarios))
 
+	store := session.NewInMemoryStore()
+	const model = "gpt-4o-mini"
+	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey, "", model)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", api.HandleHealth)
 	mux.HandleFunc("GET /api/scenarios", api.ScenariosHandler(scenarios))
+	mux.HandleFunc("POST /api/sessions", api.CreateSessionHandler(store, scenarios, logger))
+	mux.HandleFunc("DELETE /api/sessions/{id}", api.DeleteSessionHandler(store, logger))
+	mux.HandleFunc("POST /api/chat", api.ChatHandler(store, scenarios, llmClient, model, logger))
 
 	addr := ":" + cfg.Port
 	logger.Info("server starting", "addr", addr)
 
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := http.ListenAndServe(addr, api.CORSMiddleware(mux)); err != nil {
 		logger.Error("server error", "error", err)
 		os.Exit(1)
 	}
