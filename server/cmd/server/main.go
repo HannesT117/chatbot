@@ -45,14 +45,15 @@ func main() {
 	logger.Info("scenarios loaded", "count", len(scenarios))
 
 	store := session.NewInMemoryStore()
-	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey, "", "gpt-4o-mini")
+	const model = "gpt-4o-mini"
+	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey, "", model)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", api.HandleHealth)
 	mux.HandleFunc("GET /api/scenarios", api.ScenariosHandler(scenarios))
-	mux.HandleFunc("POST /api/sessions", api.CreateSessionHandler(store, scenarios))
-	mux.HandleFunc("DELETE /api/sessions/{id}", api.DeleteSessionHandler(store))
-	mux.HandleFunc("POST /api/chat", api.ChatHandler(store, scenarios, llmClient))
+	mux.HandleFunc("POST /api/sessions", api.CreateSessionHandler(store, scenarios, logger))
+	mux.HandleFunc("DELETE /api/sessions/{id}", api.DeleteSessionHandler(store, logger))
+	mux.HandleFunc("POST /api/chat", api.ChatHandler(store, scenarios, llmClient, model, logger))
 
 	addr := ":" + cfg.Port
 	logger.Info("server starting", "addr", addr)

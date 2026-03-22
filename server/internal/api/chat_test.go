@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -57,6 +59,11 @@ func setupSession(t *testing.T) (session.SessionStore, *session.Session) {
 	return store, sess
 }
 
+// discardLogger returns a slog.Logger that discards all output (suitable for tests).
+func discardLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
+}
+
 // parseSSEEvents splits an SSE response body into individual JSON payloads.
 func parseSSEEvents(body string) []map[string]string {
 	var events []map[string]string
@@ -85,7 +92,7 @@ func TestChatHandler_CleanResponse(t *testing.T) {
 		},
 	}
 
-	handler := ChatHandler(store, testScenarios(), mock)
+	handler := ChatHandler(store, testScenarios(), mock, "test-model", discardLogger())
 
 	body, _ := json.Marshal(map[string]string{
 		"session_id": sess.ID,
@@ -128,7 +135,7 @@ func TestChatHandler_InputBlocked(t *testing.T) {
 	store, sess := setupSession(t)
 	mock := &mockLLM{}
 
-	handler := ChatHandler(store, testScenarios(), mock)
+	handler := ChatHandler(store, testScenarios(), mock, "test-model", discardLogger())
 
 	body, _ := json.Marshal(map[string]string{
 		"session_id": sess.ID,
@@ -165,7 +172,7 @@ func TestChatHandler_OutputBlockedCanaryLeak(t *testing.T) {
 		},
 	}
 
-	handler := ChatHandler(store, testScenarios(), mock)
+	handler := ChatHandler(store, testScenarios(), mock, "test-model", discardLogger())
 
 	body, _ := json.Marshal(map[string]string{
 		"session_id": sess.ID,
@@ -204,7 +211,7 @@ func TestChatHandler_OutputBlockedBlocklistTerm(t *testing.T) {
 		},
 	}
 
-	handler := ChatHandler(store, testScenarios(), mock)
+	handler := ChatHandler(store, testScenarios(), mock, "test-model", discardLogger())
 
 	body, _ := json.Marshal(map[string]string{
 		"session_id": sess.ID,
@@ -241,7 +248,7 @@ func TestChatHandler_LLMError(t *testing.T) {
 		},
 	}
 
-	handler := ChatHandler(store, testScenarios(), mock)
+	handler := ChatHandler(store, testScenarios(), mock, "test-model", discardLogger())
 
 	body, _ := json.Marshal(map[string]string{
 		"session_id": sess.ID,
@@ -271,7 +278,7 @@ func TestChatHandler_MissingSession(t *testing.T) {
 	store := session.NewInMemoryStore()
 	mock := &mockLLM{}
 
-	handler := ChatHandler(store, testScenarios(), mock)
+	handler := ChatHandler(store, testScenarios(), mock, "test-model", discardLogger())
 
 	body, _ := json.Marshal(map[string]string{
 		"session_id": "nonexistent",
@@ -294,7 +301,7 @@ func TestChatHandler_MalformedRequestBody(t *testing.T) {
 	store := session.NewInMemoryStore()
 	mock := &mockLLM{}
 
-	handler := ChatHandler(store, testScenarios(), mock)
+	handler := ChatHandler(store, testScenarios(), mock, "test-model", discardLogger())
 
 	req := httptest.NewRequest(http.MethodPost, "/api/chat", strings.NewReader("not json"))
 	w := httptest.NewRecorder()
