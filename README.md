@@ -131,6 +131,17 @@ Three domain scenarios test different compliance requirements:
 - **Insurance claims (Dana)** — claims assistant; must never promise outcomes,
   must escalate complex cases to human adjusters
 
+## Setup
+
+Install [mise](https://mise.jdx.dev/) to manage Go and Node.js versions:
+
+```bash
+curl https://mise.run | sh
+mise install   # reads mise.toml and installs Go + Node.js
+```
+
+After that, `go` and `node`/`npm` are available in your shell via mise shims.
+
 ## Tech stack
 
 - **Go server:** Go, `openai-go` (official OpenAI SDK), `slog` (structured
@@ -138,6 +149,7 @@ Three domain scenarios test different compliance requirements:
 - **Frontend:** Next.js (App Router), React, Tailwind CSS
 - **Scenarios:** YAML, embedded via `//go:embed`
 - **Testing:** `go test` (server), React Testing Library (frontend)
+- **Runtime versions:** managed by [mise](https://mise.jdx.dev/) (`mise.toml`)
 - **PII detection:** TBD — deferred to stage 10
 
 ## Architecture decisions
