@@ -99,6 +99,14 @@ change.
 | Output schema validation | The chatbot produces structured (JSON) output instead of free text | ADR 010 |
 | PII scrubbing | Compliance requirements demand it — approach TBD (Go-native library or Presidio sidecar) | Stage 10 |
 
+## Known limitations
+
+**Session URL sharing.** Session IDs are embedded in the chat URL
+(`/chat/<session-id>`). Anyone with the link can send messages in your
+session and read its history. There is no authentication gate. This is
+acceptable for a demo testbed; a production deployment would require
+an httpOnly session cookie or equivalent auth mechanism.
+
 ## Deployment security recommendations
 
 The effective security boundary is the infrastructure, not the application:
