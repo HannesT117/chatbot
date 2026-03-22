@@ -24,7 +24,7 @@ func TestScenariosHandler_StatusOK(t *testing.T) {
 	}
 }
 
-func TestScenariosHandler_ReturnsSummaries(t *testing.T) {
+func TestScenariosHandler_ReturnsSummariesSortedByID(t *testing.T) {
 	configs := map[string]scenario.ScenarioConfig{
 		"financial_advisor": {Name: "financial_advisor", PersonaName: "Morgan"},
 		"brand_marketing":   {Name: "brand_marketing", PersonaName: "Sage"},
@@ -42,6 +42,14 @@ func TestScenariosHandler_ReturnsSummaries(t *testing.T) {
 
 	if got := len(summaries); got != 2 {
 		t.Errorf("len(summaries) = %d, want 2", got)
+	}
+
+	// Verify deterministic alphabetical ordering by ID.
+	if summaries[0].ID != "brand_marketing" {
+		t.Errorf("summaries[0].ID = %q, want %q", summaries[0].ID, "brand_marketing")
+	}
+	if summaries[1].ID != "financial_advisor" {
+		t.Errorf("summaries[1].ID = %q, want %q", summaries[1].ID, "financial_advisor")
 	}
 }
 

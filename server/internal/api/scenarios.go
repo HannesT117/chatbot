@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 
 	"chatbot/server/internal/scenario"
 )
@@ -26,6 +27,8 @@ func ScenariosHandler(configs map[string]scenario.ScenarioConfig) http.HandlerFu
 				PersonaName: cfg.PersonaName,
 			})
 		}
+
+		sort.Slice(summaries, func(i, j int) bool { return summaries[i].ID < summaries[j].ID })
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(summaries) //nolint:errcheck
