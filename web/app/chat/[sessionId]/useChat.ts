@@ -56,23 +56,18 @@ export function useChat(sessionId: string): UseChatReturn {
           buffer = rawEvents.pop() ?? "";
 
           for (const raw of rawEvents) {
-            const lines = raw.trim().split("\n");
-            const eventLine = lines.find((l) => l.startsWith("event:"));
-            const dataLine = lines.find((l) => l.startsWith("data:"));
-            if (!eventLine || !dataLine) continue;
+            const dataLine = raw.trim().split("\n").find((l) => l.startsWith("data:"));
+            if (!dataLine) continue;
 
-            const event = eventLine.slice("event:".length).trim();
             const data = JSON.parse(dataLine.slice("data:".length).trim());
 
-            if (event === "token") {
-              accumulated += data.text;
+            if (data.type === "token") {
+              accumulated += data.content;
               setProvisionalText(accumulated);
-            } else if (event === "done") {
+            } else if (data.type === "done") {
               settle({ id: crypto.randomUUID(), role: "assistant", text: accumulated });
-            } else if (event === "blocked") {
+            } else if (data.type === "blocked") {
               settle({ id: crypto.randomUUID(), role: "blocked", text: "" });
-            } else if (event === "error") {
-              settle({ id: crypto.randomUUID(), role: "error", text: data.message ?? "An error occurred" });
             }
           }
         }
