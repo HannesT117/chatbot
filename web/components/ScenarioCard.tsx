@@ -1,9 +1,9 @@
 import { Card, CardHeader, CardDescription } from "@/components/ui/card";
 
 export type Scenario = {
+  id: string;
   name: string;
   persona_name: string;
-  persona_description: string;
 };
 
 type Props = {
@@ -17,7 +17,7 @@ export function ScenarioCard({ scenario }: Props) {
     <Card className="w-full hover:border-primary transition-colors">
       <CardHeader>
         <p className="font-semibold text-base">{scenario.persona_name}</p>
-        <CardDescription>{scenario.persona_description}</CardDescription>
+        <CardDescription>{scenario.name}</CardDescription>
       </CardHeader>
     </Card>
   );

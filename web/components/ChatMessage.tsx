@@ -3,7 +3,7 @@ import { AlertTriangle } from "lucide-react";
 
 export type Message = {
   id: string;
-  role: "user" | "assistant" | "blocked" | "error";
+  role: "user" | "assistant" | "blocked" | "error" | "turn_limit";
   text: string;
 };
 
@@ -19,6 +19,19 @@ export function ChatMessage({ message }: Props) {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             This response was blocked by the content filter.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (message.role === "turn_limit") {
+    return (
+      <div className="flex justify-start my-2">
+        <Alert variant="destructive" className="max-w-[80%]" role="alert">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            You have reached the maximum number of turns for this session.
           </AlertDescription>
         </Alert>
       </div>

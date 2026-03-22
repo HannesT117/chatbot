@@ -47,7 +47,10 @@ func ChatHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		// 1. Decode request body.
+		// 1. Limit request body size to prevent memory exhaustion.
+		r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
+
+		// 2. Decode request body.
 		var req chatRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "invalid request body", http.StatusBadRequest)
@@ -55,6 +58,11 @@ func ChatHandler(
 		}
 		if req.SessionID == "" || req.Message == "" {
 			http.Error(w, "session_id and message are required", http.StatusBadRequest)
+			return
+		}
+		const maxMessageLength = 4000
+		if len(req.Message) > maxMessageLength {
+			http.Error(w, "message too long", http.StatusBadRequest)
 			return
 		}
 
@@ -76,6 +84,18 @@ func ChatHandler(
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("X-Accel-Buffering", "no")
+
+		// Check turn limit before processing — enforces session conversation cap.
+		if scenarioCfg.MaxTurns > 0 && sess.TurnLimitReached(scenarioCfg.MaxTurns) {
+			logger.Info("turn limit reached",
+				"session_id", sess.ID,
+				"scenario_id", sess.ScenarioID,
+				"turn_count", sess.TurnCount,
+				"max_turns", scenarioCfg.MaxTurns,
+			)
+			writeSSEEvent(w, sseEvent{Type: "turn_limit"})
+			return
+		}
 
 		// 4. Input filter — check AFTER setting SSE headers so we can send blocked event.
 		if filter.ContainsBlocked(req.Message, scenarioCfg.BlocklistTerms) {
