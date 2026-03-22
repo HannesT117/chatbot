@@ -1,6 +1,6 @@
 # 008 — Test strategy: mocked unit tests and gated live integration tests
 
-**Status:** Accepted
+**Status:** Accepted (implementation updated for Go + Next.js — see note)
 **Date:** March 20, 2026
 
 ## Context
@@ -54,3 +54,21 @@ and live backends. These tests define what the guardrail system must withstand.
 - Adversarial tests are the most valuable artifact of this project. They
   must be kept up to date as new attack patterns emerge and as the pipeline
   evolves.
+
+## Update — March 22, 2026 (ADRs 010, 015)
+
+The three-tier strategy carries forward with updated tooling and framing:
+
+- **Unit tests:** `go test ./...` (server), React Testing Library (frontend).
+  LLM calls mocked via Go interface. Same principle: fast, deterministic,
+  always in CI.
+- **Integration tests:** Gated behind `CHATBOT_LIVE_TESTS=1`. Hit the Go
+  server's API with a real LLM backend. Same gate mechanism.
+- **Characterization tests** (renamed from "adversarial"): Document known
+  limitations under adversarial input, organised by category
+  (brand_compliance, prompt_leakage, regulatory). Reframed: these are not
+  proof of robustness — they record how the system behaves so regressions
+  are visible and trade-offs are explicit.
+
+Python-specific references (`pytest`, `pytest-asyncio`, `tests/unit/`,
+`tests/adversarial/`) no longer apply.

@@ -1,7 +1,8 @@
 # 004 — LiteLLM for LLM abstraction
 
-**Status:** Accepted
+**Status:** Superseded by ADR 015
 **Date:** March 20, 2026
+**Superseded:** March 22, 2026
 
 ## Context
 
@@ -40,3 +41,14 @@ in application code.
   updates.
 - Async calls use `litellm.acompletion`, consistent with the async-first
   architecture (ADR 003).
+
+## Superseded — March 22, 2026
+
+This ADR is superseded by ADR 015 (Go + Next.js monorepo replaces Python
+monolith).
+
+The Go server uses `openai-go` (the official OpenAI Go SDK) instead of litellm.
+Provider switching is handled by configuring the base URL — `openai-go` works
+with any OpenAI-compatible API (OpenAI, Anthropic, Azure, Ollama, etc.). The
+multi-model judge has been cut (ADR 010), removing the need for multi-provider
+calls in a single process.

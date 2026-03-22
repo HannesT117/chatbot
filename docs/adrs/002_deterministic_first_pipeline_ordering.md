@@ -1,6 +1,6 @@
 # 002 — Deterministic-first pipeline ordering
 
-**Status:** Accepted
+**Status:** Accepted (narrowed by ADR 010)
 **Date:** March 20, 2026
 
 ## Context
@@ -54,3 +54,17 @@ Rationale:
   the LLM. The output pipeline provides a second layer of defense.
 - Adding a new check requires an explicit decision about where it sits in
   the ordering, which keeps the pipeline auditable.
+
+## Update — March 22, 2026 (ADR 010)
+
+ADR 010 removed all probabilistic/ML-based checks from the pipeline. The
+ordering principle in this ADR remains valid — deterministic checks still run
+in a defined order — but the "probabilistic checks as supplementary signals"
+clause is now moot. The pipeline is deterministic-only.
+
+This reinforces the original rationale: deterministic checks cannot be argued
+around, produce auditable evidence, and are fast and cheap. The decision to
+drop probabilistic checks entirely (rather than keep them as signals) was
+driven by the finding that they create false confidence without meaningful
+security benefit in a chatbot without tool access. See ADR 010 for the full
+security threat model.

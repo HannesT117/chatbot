@@ -1,7 +1,8 @@
 # 009 — sentence-transformers as an optional dependency
 
-**Status:** Accepted
+**Status:** Superseded by ADR 010
 **Date:** March 20, 2026
+**Superseded:** March 22, 2026
 
 ## Context
 
@@ -37,3 +38,25 @@ continues to function without semantic rate limiting.
   group) silently loses semantic rate limiting rather than crashing. The log
   warning at startup is the only signal. Monitoring must check for this warning
   in production deployments.
+
+## Superseded — March 22, 2026
+
+This ADR is superseded by ADR 010 (Security threat model: infrastructure over
+LLM guardrails).
+
+Semantic rate limiting has been removed from the architecture entirely. The
+reasoning:
+
+1. The feature required PyTorch (~1.5 GB) and sentence-transformers for a
+   narrow use case: detecting rephrased re-asks of denied requests. Turn limits
+   already handle conversation-length abuse adequately.
+
+2. For a chatbot without tool access, the security value of semantic rate
+   limiting is marginal. An attacker who rephrases a denied request may get the
+   LLM to produce off-brand text, but cannot exfiltrate data or take actions.
+   The output blocklist and observability layer catch the damage.
+
+3. Removing this dependency significantly reduces the install footprint and
+   deployment complexity.
+
+The `rate_limiter.py` stub and the `ml` dependency group are removed.

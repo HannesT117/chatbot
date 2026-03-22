@@ -1,97 +1,158 @@
 # LLM guardrails testbed
 
-This project is a testing ground for best practices around securing LLM
-application output. It explores techniques for ensuring that AI-generated
-responses are correct, compliant, and appropriate — covering regulated
-industries like financial services, as well as brand-sensitive contexts
-like advertising.
+A testing ground for keeping LLM-powered chatbots on-brand, on-topic, and
+compliant in regulated industries — without relying on LLM-based guardrails
+that don't work.
 
-## Approach
+## The problem
 
-The core idea is **defense in depth with deterministic guardrails first**.
-The LLM is treated as an untrusted component — its output is validated by
-the same rigor you'd apply to user input in a web application.
+If you run a chatbot for a law firm, it shouldn't hand out cookie recipes. If
+you run one for a bank, it shouldn't give investment advice. If you run one for
+an insurance company, it shouldn't promise claim outcomes. Keeping an LLM
+focused on its job and representing the brand correctly is a real problem.
 
-The request/response flow passes through three pipeline stages:
+The AI security industry sells LLM-based guardrails — prompt injection
+detectors, LLM-as-judge validators, confidence scorers — as the solution.
+These don't work. Research shows that guardrails self-reporting 99%
+effectiveness are "all extremely breakable" under adaptive attack (Schulhoff,
+2026). You cannot patch a brain the way you patch a software bug.
 
-1. **Input pipeline**: Deterministic checks run first (schema validation,
-   regex blocklists, PII scrubbing), followed by ML-based signals (prompt
-   injection detection, semantic rate limiting). Intent and tool routing
-   decide what the LLM is allowed to do for this request.
-2. **Guarded LLM call**: A carefully designed system prompt locks the model
-   into a role, forces structured output, and includes canary tokens to
-   detect system prompt leakage. The conversation manager enforces turn
-   limits and token budgets, summarizes old context instead of truncating
-   it, and tracks multi-round attack patterns across turns.
-3. **Output pipeline**: Deterministic validation runs first again — schema
-   checks, action allowlist enforcement, canary leak detection. Then
-   optional ML-based scoring (confidence, hallucination, multi-model
-   judging). Failed outputs retry with feedback, up to a hard limit.
+## Architecture
 
-Everything is logged with structured labels and scores. High-risk patterns
-trigger alerts. Flagged conversations are queued for human review, and 1%
-of all conversations are randomly sampled for quality.
+```
+Browser → Next.js (web/) → Go server (server/) → LLM provider API
+```
 
-See [plans/001-guardrailed-chatbot.md](plans/001-guardrailed-chatbot.md)
-for the full architecture.
+**Go server** (`server/`) is the security boundary. It holds LLM API keys,
+manages sessions, builds system prompts, runs deterministic filters, and logs
+everything. Single binary via `go build`.
 
-## Why this approach
+**Next.js app** (`web/`) is a pure presentation layer. It renders the chat UI
+and consumes the Go server's REST+SSE API. It never touches LLM keys, system
+prompts, or session internals.
 
-**Deterministic checks can't be talked around.** A regex blocklist doesn't
-care how creatively the user phrases a request. A JSON schema validator
-doesn't negotiate. By placing these checks before and after the LLM, the
-system maintains hard boundaries even when the model is fully compromised
-or cooperating with an attacker.
+Scenario configs (`scenarios/`) are embedded in the Go binary via `//go:embed`.
 
-**Treating LLM output as untrusted input is the right threat model.** In
-regulated environments, "the model said it was fine" is not a defensible
-position. Structural validation (schema checks, action allowlists) provides
-auditable proof that output conforms to policy, regardless of what the
-model intended.
+## Our approach
 
-**Multi-round awareness catches what single-turn filters miss.** Many
-real-world attacks work by gradually steering the conversation — first
-establishing trust, then escalating. Stateful tracking of denied requests,
-topic drift, and escalation patterns across turns addresses this.
+Instead of building elaborate LLM-based defenses, we invest in what actually
+works:
 
-**Layering is key because no single technique is sufficient.** The system
-prompt will be bypassed. The input filter will miss novel attacks. The
-output filter may pass edge cases. But an attacker who has to defeat all
-three simultaneously, across a conversation that's being monitored for
-patterns, faces a much harder problem.
+1. **A well-crafted system prompt** that tells the LLM exactly what persona to
+   adopt, what topics are allowed, what constraints to follow, and what terms to
+   avoid. This is brand compliance, not security — it handles the vast majority
+   of normal interactions correctly.
 
-## Why common alternatives fall short
+2. **Deterministic filters** before and after the LLM call. Regex blocklists
+   catch known forbidden terms. Canary tokens detect system prompt leakage.
+   These are cheap, fast, and cannot be argued around.
 
-**"Just use a good system prompt"** — System prompts are a single layer
-of defense that lives inside the model context. They can be overridden by
-sufficiently creative prompt injection, context stuffing, or multi-turn
-manipulation. A system prompt is necessary but never sufficient.
+3. **Infrastructure-level security** as the real defense boundary. The LLM has
+   no tool access, no code execution, no database queries. Even a fully
+   jailbroken instance can only produce text — it cannot exfiltrate data or take
+   destructive actions.
 
-**Probabilistic content filters as primary defense** — Asking an LLM to
-judge whether another LLM's output is safe creates a recursive trust
-problem. The judge model has the same failure modes as the primary model.
-These filters are useful as supplementary signals but unreliable as sole
-gates. Deterministic checks must come first.
+4. **Observability** to catch what filters miss. Structured logging of every
+   input and output, alerting on anomalies.
 
-**Blocklist-only approaches** — Keyword blocklists catch known patterns but
-don't generalize. They miss rephrased attacks, encoded payloads, and novel
-techniques. They're a fast first layer, not a complete solution.
+## What we explicitly don't do — and why
 
-**Single-turn analysis only** — Evaluating each message in isolation misses
-the most effective attack class: multi-turn escalation. An attacker who is
-denied on turn 1 rephrases on turn 2, builds rapport on turn 3, and
-extracts on turn 4. Without cross-turn state tracking, each turn looks
-benign.
+**No prompt injection detection.** All detection approaches (regex heuristics,
+embedding classifiers, llm-guard) are fundamentally unreliable against adaptive
+attacks. Since this chatbot has no tool access, successful injection can only
+produce off-brand text, not exfiltrate data. The output blocklist and
+observability catch the damage more reliably.
 
-**Over-relying on third-party guardrail libraries** — Many guardrail
-frameworks wrap probabilistic LLM calls in a convenience API. This can
-create false confidence — the guardrail "passed" so the output must be
-safe. Understanding and controlling each layer explicitly produces a more
-auditable and debuggable system.
+**No LLM-as-judge output validation.** Using a second LLM to evaluate the first
+has the same failure modes. The judge can be confused by the same techniques
+that confuse the primary model. It adds latency, cost, and complexity without
+reliable benefit.
 
-## Goals
+**No semantic rate limiting.** Embedding-based similarity detection against
+denied inputs requires PyTorch (~1.5 GB) and addresses a narrow attack vector
+that turn limits already handle.
 
-The goal is not to build a production chatbot, but to identify which
-guardrail combinations are reliable enough for high-stakes environments —
-and to document the trade-offs between safety, latency, and user
-experience.
+**No confidence scoring or hedging detection.** The presence of "I think" in a
+response does not correlate with policy compliance.
+
+**No multi-model judge, action allowlist, or stateful attack tracking.** These
+are over-engineered for a text-only chatbot without tool access. See
+[ADR 010](docs/adrs/010_security_threat_model.md) for the full reasoning.
+
+## Deferred techniques — to be revisited
+
+These techniques were cut based on the current threat model (no tool access,
+text-only chatbot). They should be revisited if the system's capabilities
+change.
+
+| Technique | Revisit when | Reference |
+|-----------|-------------|-----------|
+| Prompt injection detection | Tool access or database queries are added — injection becomes a real exfiltration vector | ADR 007 (superseded by 010) |
+| LLM-as-judge output validation | Response quality requirements exceed what deterministic filters can catch, AND a reliable judge approach emerges | ADR 010 |
+| Semantic rate limiting | Repeated rephrased attacks become a measurable problem that turn limits don't address | ADR 009 (superseded by 010) |
+| Confidence / hedging scoring | A correlation between hedging language and policy violations is demonstrated empirically | ADR 010 |
+| Stateful attack tracking | Multi-turn escalation attacks are observed in production logs that turn limits don't prevent | ADR 010 |
+| Action allowlist | The chatbot gains the ability to trigger actions (tool calls, API writes) | ADR 010 |
+| Retry loop with LLM feedback | Deterministic filter false-positive rate is high enough to justify automated retries | ADR 010 |
+| HITL queue | Observability logging is insufficient and human review of flagged conversations is needed in real-time | — |
+| Intent classifier / tool router | The chatbot gains tool access or needs to route requests to specialised handlers | ADR 010 |
+| Output schema validation | The chatbot produces structured (JSON) output instead of free text | ADR 010 |
+| PII scrubbing | Compliance requirements demand it — approach TBD (Go-native library or Presidio sidecar) | Stage 10 |
+
+## Deployment security recommendations
+
+The effective security boundary is the infrastructure, not the application:
+
+- **Run in an isolated container.** No host mounts, no network access to
+  internal systems.
+- **No tool access.** The LLM produces text and nothing else. No function
+  calling, no code execution, no database access. This is the single most
+  important security property.
+- **Deterministic APIs for data.** If the chatbot needs external data (product
+  info, branch locations), the application layer fetches it via deterministic
+  API calls. The LLM never queries systems directly.
+- **Principle of least privilege.** Non-root user, minimal filesystem
+  permissions, scoped API keys.
+- **Rate limiting at infrastructure level.** Reverse proxy / API gateway, not
+  inside the application.
+- **Audit logging.** All inputs and outputs logged with session ID and
+  timestamp. Immutable, retained for compliance.
+- **No sensitive data in context.** The system prompt contains no customer PII
+  or internal data. If it leaks, nothing sensitive is exposed.
+
+## Scenarios
+
+Three domain scenarios test different compliance requirements:
+
+- **Financial advisor (Morgan)** — retail bank assistant; must never give
+  investment advice, must include regulatory disclaimers
+- **Brand marketing (Sage)** — outdoor apparel brand assistant; must stay
+  on-brand, never mention competitors, no unverifiable claims
+- **Insurance claims (Dana)** — claims assistant; must never promise outcomes,
+  must escalate complex cases to human adjusters
+
+## Tech stack
+
+- **Go server:** Go, `openai-go` (official OpenAI SDK), `slog` (structured
+  logging)
+- **Frontend:** Next.js (App Router), React, Tailwind CSS
+- **Scenarios:** YAML, embedded via `//go:embed`
+- **Testing:** `go test` (server), React Testing Library (frontend)
+- **PII detection:** TBD — deferred to stage 10
+
+## Architecture decisions
+
+See [docs/adrs/](docs/adrs/) for the full set. Key decisions:
+
+- [ADR 010](docs/adrs/010_security_threat_model.md) — Security threat model:
+  infrastructure over LLM guardrails
+- [ADR 011](docs/adrs/011_rest_sse_api_transport.md) — REST + SSE for API
+  transport
+- [ADR 012](docs/adrs/012_in_memory_session_storage.md) — In-memory session
+  storage with pluggable interface
+- [ADR 013](docs/adrs/013_embedded_scenario_configs.md) — Embed scenario
+  configs via go:embed
+- [ADR 014](docs/adrs/014_markdown_prompt_format.md) — Markdown headers for
+  system prompt structure
+- [ADR 015](docs/adrs/015_go_nextjs_monorepo.md) — Go + Next.js monorepo
+  (replaces Python monolith)

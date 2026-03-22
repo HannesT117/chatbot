@@ -1,7 +1,8 @@
 # 007 — Swappable PromptInjectionDetector protocol
 
-**Status:** Accepted
+**Status:** Superseded by ADR 010
 **Date:** March 20, 2026
+**Superseded:** March 22, 2026
 
 ## Context
 
@@ -51,3 +52,33 @@ the protocol with minimal overhead.
   requires only implementing the protocol — no pipeline changes.
 - The regex stub means early pipeline steps are testable end-to-end before the
   ML-based detector is ready.
+
+## Superseded — March 22, 2026
+
+This ADR is superseded by ADR 010 (Security threat model: infrastructure over
+LLM guardrails).
+
+All prompt injection detection has been removed from the architecture. The
+reasoning:
+
+1. All detection approaches — regex heuristics, embedding classifiers,
+   llm-guard — are fundamentally unreliable against adaptive attacks. Research
+   shows that guardrails self-reporting 99% effectiveness are "all extremely
+   breakable" under adversarial pressure (Schulhoff, 2026).
+
+2. This chatbot has no tool access. It cannot execute code, query databases, or
+   take actions. Even a fully successful prompt injection can only produce
+   inappropriate text — there is no data exfiltration or destructive action
+   possible.
+
+3. The brand-damage risk from inappropriate text is better addressed by the
+   system prompt (brand compliance), deterministic output blocklist, and
+   observability (logging + human review) — all of which are simpler, cheaper,
+   and more reliable than ML-based classifiers.
+
+4. Investing in prompt injection detection creates false confidence: operators
+   assume the guardrail is working, which discourages the manual review and
+   observability that would actually catch problems.
+
+The `PromptInjectionDetector` protocol, custom embedding classifier, and
+llm-guard integration are not implemented. The `injection.py` stub is removed.

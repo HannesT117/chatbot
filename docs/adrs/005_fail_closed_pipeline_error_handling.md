@@ -1,6 +1,6 @@
 # 005 — Fail-closed pipeline error handling
 
-**Status:** Accepted
+**Status:** Accepted (implementation updated for Go — see note)
 **Date:** March 20, 2026
 
 ## Context
@@ -52,3 +52,18 @@ that halts the pipeline.
 - Steps that are truly optional (for example, the multi-model judge) must be
   wrapped at the call site to catch their own exceptions and return a
   pass-through result rather than propagating to the pipeline runner.
+
+## Update — March 22, 2026 (ADR 015)
+
+The fail-closed principle carries forward to the Go server. The implementation
+details change:
+
+- Python `try/except Exception` → Go `error` return values and `recover()`
+  for panics
+- `PipelineStep` protocol with `process()` → Go interface with equivalent
+  method signature
+- `PipelineResult.error` → Go error type that halts the pipeline
+
+The principle is unchanged: a crashing filter step must never result in an
+unguarded response reaching the user. The optional-step clause (multi-model
+judge) is now moot — all ML-based steps have been removed (ADR 010).

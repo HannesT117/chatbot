@@ -1,7 +1,8 @@
 # 003 — Async-first architecture
 
-**Status:** Accepted
+**Status:** Superseded by ADR 015
 **Date:** March 20, 2026
+**Superseded:** March 22, 2026
 
 ## Context
 
@@ -47,3 +48,13 @@ equivalent non-blocking approach.
 - CPU-bound steps (ML inference) may benefit from `ProcessPoolExecutor` in a
   production deployment to avoid blocking the event loop, but this is deferred
   until profiling shows it's necessary.
+
+## Superseded — March 22, 2026
+
+This ADR is superseded by ADR 015 (Go + Next.js monorepo replaces Python
+monolith).
+
+The Python asyncio architecture is no longer applicable. The Go server uses
+goroutines for concurrency (native to the language, no async/await syntax
+needed). The principle — sequential pipeline execution where order matters —
+carries forward, but the implementation is entirely different.

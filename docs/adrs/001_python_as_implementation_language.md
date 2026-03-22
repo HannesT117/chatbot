@@ -1,7 +1,8 @@
 # 001 — Python as implementation language
 
-**Status:** Accepted
+**Status:** Superseded by ADR 015
 **Date:** March 20, 2026
+**Superseded:** March 22, 2026
 
 ## Context
 
@@ -53,3 +54,14 @@ That is an ops decision and does not require rewriting the pipeline.
 - A future production version that replaces ML components with hosted APIs
   could be rewritten in Go or Rust at that point, with the Python testbed
   serving as the reference implementation.
+
+## Superseded — March 22, 2026
+
+This ADR is superseded by ADR 015 (Go + Next.js monorepo replaces Python
+monolith).
+
+ADR 010 removed all ML-based guardrails (prompt injection detection, LLM judge,
+semantic rate limiting), eliminating the ML/NLP ecosystem as the primary reason
+for Python. With the remaining requirements being an HTTP server and a web UI,
+Go and Next.js are a better fit: single-binary deployment, small containers,
+cleaner security boundary, and a real web frontend instead of a terminal TUI.
