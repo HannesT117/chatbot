@@ -38,12 +38,13 @@ See @../docs/commands.md
 
 After every correction or mistake, update this CLAUDE.md with a rule to prevent repeating it. 
 
-## Working with Plan Mode
+## Planning / Plan Mode
 
 - Start every complex task in plan mode (shift+tab to cycle)
 - Pour energy into the plan so Claude can 1-shot the implementation
 - When something goes sideways, switch back to plan mode and re-plan. Don't keep pushing.
 - Use plan mode for verification steps too, not just for the build
+- Store plans ALWAYS in /plans/
 
 ## Parallel Work
 
