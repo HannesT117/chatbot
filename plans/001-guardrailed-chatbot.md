@@ -204,8 +204,8 @@ prompt_leakage, regulatory.
 |-------|------|--------|
 | 1 | Python scaffold | Done (to be deleted in stage 3) |
 | 2 | Python conversation manager | Done (to be deleted in stage 3) |
-| 3 | Delete Python code and config: remove `src/`, `tests/`, `pyproject.toml`, `.python-version`, `uv.lock`; update `docs/commands.md` and `.gitignore` for Go + Next.js | Pending |
-| 4 | Go server scaffold: module, entry point, health endpoint, scenario loading via `go:embed` | Pending |
+| 3 | Delete Python code and config: remove `src/`, `tests/`, `pyproject.toml`, `.python-version`, `uv.lock`; update `docs/commands.md` and `.gitignore` for Go + Next.js | Done |
+| 4 | Go server scaffold: module, entry point, health endpoint, scenario loading via `go:embed` | Done |
 | 5 | Session management: struct, store interface, in-memory impl, turn limits, token budget, sliding window, canary tokens | Pending |
 | 6 | System prompt: Go template, markdown headers, per-scenario persona notes, canary injection | Pending |
 | 7 | LLM integration + SSE streaming + deterministic filters: openai-go wrapper, `POST /api/chat` with filter hooks, input blocklist, output blocklist, canary detection, CORS | Pending |
