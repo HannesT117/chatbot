@@ -16,6 +16,8 @@ import (
 type config struct {
 	Port         string
 	OpenAIAPIKey string
+	LLMBaseURL   string
+	LLMModel     string
 }
 
 func configFromEnv() config {
@@ -23,9 +25,15 @@ func configFromEnv() config {
 	if port == "" {
 		port = "8080"
 	}
+	model := os.Getenv("LLM_MODEL")
+	if model == "" {
+		model = "gpt-4o-mini"
+	}
 	return config{
 		Port:         port,
 		OpenAIAPIKey: os.Getenv("OPENAI_API_KEY"),
+		LLMBaseURL:   os.Getenv("LLM_BASE_URL"),
+		LLMModel:     model,
 	}
 }
 
@@ -46,15 +54,14 @@ func main() {
 	logger.Info("scenarios loaded", "count", len(scenarios))
 
 	store := session.NewInMemoryStore()
-	const model = "gpt-4o-mini"
-	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey, "", model)
+	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey, cfg.LLMBaseURL, cfg.LLMModel)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", api.HandleHealth)
 	mux.HandleFunc("GET /api/scenarios", api.ScenariosHandler(scenarios))
 	mux.HandleFunc("POST /api/sessions", api.CreateSessionHandler(store, scenarios, logger))
 	mux.HandleFunc("DELETE /api/sessions/{id}", api.DeleteSessionHandler(store, logger))
-	mux.HandleFunc("POST /api/chat", api.ChatHandler(store, scenarios, llmClient, model, logger))
+	mux.HandleFunc("POST /api/chat", api.ChatHandler(store, scenarios, llmClient, cfg.LLMModel, logger))
 
 	addr := ":" + cfg.Port
 	logger.Info("server starting", "addr", addr)

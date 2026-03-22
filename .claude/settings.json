@@ -1,8 +1,5 @@
 {
-  "env": {
-    "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
-    "PATH": "$HOME/.local/share/mise/shims:$PATH"
-  },
+  "env": {},
   "permissions": {
     "allow": [
       "Bash(pnpm run lint*)",
@@ -17,11 +14,7 @@
       "Bash(git stash:*)",
       "Bash(git add:*)"
     ],
-    "deny": [
-      "Bash(curl:*)",
-      "Read(./.env)",
-      "Read(./.env.*)"
-    ]
+    "deny": ["Bash(curl:*)", "Read(./.env)", "Read(./.env.*)"]
   },
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,

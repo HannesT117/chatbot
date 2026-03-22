@@ -12,26 +12,20 @@
 
 ## SSE Event Contract
 
-The Go server emits named SSE events over the `POST /api/chat` response. This frontend is built against this contract — the Go server must match it exactly.
+The Go server emits plain `data:` SSE lines (no named `event:` lines). The event type is a `type` field inside the JSON payload.
 
 ```
-event: token
-data: {"text":"Hello"}
+data: {"type":"token","content":"Hello"}
 
-event: blocked
-data: {"reason":"output_blocklist"}
+data: {"type":"done"}
 
-event: done
-data: {}
-
-event: error
-data: {"message":"internal server error"}
+data: {"type":"blocked"}
 ```
 
-- `token` — append `text` to the in-progress assistant message
-- `done` — message complete, commit provisional text to message history
-- `blocked` — discard provisional tokens, insert a blocked notice in history
-- `error` — discard provisional tokens, insert an error notice in history
+- `token` — append `content` to the in-progress assistant message
+- `done` — commit provisional text as assistant message, stop streaming
+- `blocked` — discard provisional tokens, insert a blocked notice, stop streaming
+- Network errors / connection drop → frontend inserts a local error message
 
 ## Go Server API
 

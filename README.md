@@ -1,21 +1,31 @@
-# LLM guardrails testbed
+# Yet another Chatbot 
+
+This one is not yet working.
 
 A testing ground for keeping LLM-powered chatbots on-brand, on-topic, and
 compliant in regulated industries — without relying on LLM-based guardrails
 that don't work.
 
-## The problem
+## Install & Start
 
-If you run a chatbot for a law firm, it shouldn't hand out cookie recipes. If
-you run one for a bank, it shouldn't give investment advice. If you run one for
-an insurance company, it shouldn't promise claim outcomes. Keeping an LLM
-focused on its job and representing the brand correctly is a real problem.
+**Prerequisites:** [mise](https://mise.jdx.dev/) for runtime versions, and an OpenAI API key.
 
-The AI security industry sells LLM-based guardrails — prompt injection
-detectors, LLM-as-judge validators, confidence scorers — as the solution.
-These don't work. Research shows that guardrails self-reporting 99%
-effectiveness are "all extremely breakable" under adaptive attack (Schulhoff,
-2026). You cannot patch a brain the way you patch a software bug.
+```bash
+# 1. Install Go and Node.js via mise
+curl https://mise.run | sh
+mise install
+
+# 2. Set your API key
+export OPENAI_API_KEY=sk-...
+
+# 3. Start the Go server (port 8080)
+cd server && go run ./cmd/server/
+
+# 4. In a second terminal, start the Next.js frontend (port 3000)
+cd web && npm install && npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and pick a scenario to start chatting.
 
 ## Architecture
 
@@ -40,7 +50,7 @@ works:
 
 1. **A well-crafted system prompt** that tells the LLM exactly what persona to
    adopt, what topics are allowed, what constraints to follow, and what terms to
-   avoid. This is brand compliance, not security — it handles the vast majority
+   avoid. This is brand compliance, not security. It handles the vast majority
    of normal interactions correctly.
 
 2. **Deterministic filters** before and after the LLM call. Regex blocklists
@@ -49,7 +59,7 @@ works:
 
 3. **Infrastructure-level security** as the real defense boundary. The LLM has
    no tool access, no code execution, no database queries. Even a fully
-   jailbroken instance can only produce text — it cannot exfiltrate data or take
+   jailbroken instance can only produce text, it cannot exfiltrate data or take
    destructive actions.
 
 4. **Observability** to catch what filters miss. Structured logging of every
