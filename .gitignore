@@ -1,6 +1,14 @@
 settings.local.json
 .DS_Store
 .claude/worktrees/
-__pycache__/
-*.pyc
-*.pyo
+
+# Go
+/server/bin/
+*.exe
+*.test
+*.out
+
+# Next.js
+web/.next/
+web/out/
+web/node_modules/

@@ -1,43 +1,59 @@
 # Commands
 
-## Run Dev
+## Go server
+
+### Run dev
 
 ```sh
-uv run python -m chatbot
+go run ./cmd/server/
 ```
 
-## Test
+### Test
 
 ```sh
-uv run pytest tests/unit/
+go test ./...
 ```
 
-## Test (all, including integration)
+### Test (all, including live LLM integration)
 
 ```sh
-CHATBOT_LIVE_TESTS=1 uv run pytest
+CHATBOT_LIVE_TESTS=1 go test ./...
 ```
 
-## Typecheck
+### Typecheck / build check
 
 ```sh
-uv run mypy src/
+go build ./...
 ```
 
-## Lint
+### Vet
 
 ```sh
-uv run ruff check src/ tests/
+go vet ./...
 ```
 
-## Format
+## Next.js frontend (web/)
+
+### Run dev
 
 ```sh
-uv run ruff format src/ tests/
+cd web && npm run dev
 ```
 
-## Clean Build
+### Test
 
 ```sh
-uv sync --reinstall
+cd web && npm test
+```
+
+### Typecheck
+
+```sh
+cd web && npx tsc --noEmit
+```
+
+### Lint
+
+```sh
+cd web && npm run lint
 ```
