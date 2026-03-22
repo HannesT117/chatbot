@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"chatbot/server/internal/api"
 	"chatbot/server/internal/llm"
@@ -58,7 +59,14 @@ func main() {
 	addr := ":" + cfg.Port
 	logger.Info("server starting", "addr", addr)
 
-	if err := http.ListenAndServe(addr, api.CORSMiddleware(mux)); err != nil {
+	srv := &http.Server{
+		Addr:         addr,
+		Handler:      api.CORSMiddleware(mux),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 120 * time.Second, // long enough for LLM streaming
+		IdleTimeout:  60 * time.Second,
+	}
+	if err := srv.ListenAndServe(); err != nil {
 		logger.Error("server error", "error", err)
 		os.Exit(1)
 	}

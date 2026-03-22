@@ -2,15 +2,15 @@ import { render, screen } from "@testing-library/react";
 import { ScenarioCard, type Scenario } from "@/components/ScenarioCard";
 
 const scenario: Scenario = {
-  name: "financial_advisor",
+  id: "financial_advisor",
+  name: "Financial Advisor",
   persona_name: "Morgan",
-  persona_description: "A cautious financial literacy assistant.",
 };
 
 describe("ScenarioCard", () => {
-  it("renders persona name and description", () => {
+  it("renders persona name and scenario name", () => {
     render(<ScenarioCard scenario={scenario} />);
     expect(screen.getByText("Morgan")).toBeInTheDocument();
-    expect(screen.getByText(/cautious financial/)).toBeInTheDocument();
+    expect(screen.getByText("Financial Advisor")).toBeInTheDocument();
   });
 });

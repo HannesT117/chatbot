@@ -6,16 +6,16 @@ async function getScenarios(): Promise<Scenario[]> {
   const res = await fetch(`${apiUrl}/api/scenarios`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch scenarios");
   const body = await res.json();
-  return body.scenarios as Scenario[];
+  return body as Scenario[];
 }
 
-async function createSession(scenarioName: string) {
+async function createSession(scenarioId: string) {
   "use server";
   const apiUrl = process.env.API_URL ?? "http://localhost:8080";
   const res = await fetch(`${apiUrl}/api/sessions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scenario_name: scenarioName }),
+    body: JSON.stringify({ scenario_id: scenarioId }),
   });
   if (!res.ok) throw new Error("Failed to create session");
   const body = await res.json();
@@ -34,7 +34,7 @@ export default async function Home() {
         </p>
         <div className="flex flex-col gap-4">
           {scenarios.map((s) => (
-            <form key={s.name} action={createSession.bind(null, s.name)}>
+            <form key={s.id} action={createSession.bind(null, s.id)}>
               <button
                 type="submit"
                 aria-label={s.persona_name}

@@ -68,6 +68,8 @@ export function useChat(sessionId: string): UseChatReturn {
               settle({ id: crypto.randomUUID(), role: "assistant", text: accumulated });
             } else if (data.type === "blocked") {
               settle({ id: crypto.randomUUID(), role: "blocked", text: "" });
+            } else if (data.type === "turn_limit") {
+              settle({ id: crypto.randomUUID(), role: "turn_limit", text: "" });
             }
           }
         }

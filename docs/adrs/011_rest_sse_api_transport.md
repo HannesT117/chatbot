@@ -36,8 +36,9 @@ REST + SSE.
 
 - LLM responses take seconds to generate. Streaming tokens as they arrive is a
   significant UX improvement — users see the response forming immediately.
-- SSE is consumed trivially in the browser via native `EventSource`. No extra
-  libraries needed on the Next.js side.
+- SSE is consumed in the browser using `fetch` with a `ReadableStream` reader.
+  Native `EventSource` is not used because `POST /api/chat` requires a request
+  body, and `EventSource` only supports GET. No extra libraries are needed.
 - Works through any reverse proxy, CDN, or load balancer without special
   configuration.
 - Unidirectional (server → client) is sufficient for chat. If cancellation is
