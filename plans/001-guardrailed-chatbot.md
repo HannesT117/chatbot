@@ -206,11 +206,11 @@ prompt_leakage, regulatory.
 | 2 | Python conversation manager | Done (to be deleted in stage 3) |
 | 3 | Delete Python code and config: remove `src/`, `tests/`, `pyproject.toml`, `.python-version`, `uv.lock`; update `docs/commands.md` and `.gitignore` for Go + Next.js | Done |
 | 4 | Go server scaffold: module, entry point, health endpoint, scenario loading via `go:embed` | Done |
-| 5 | Session management: struct, store interface, in-memory impl, turn limits, token budget, sliding window, canary tokens | Pending |
-| 6 | System prompt: Go template, markdown headers, per-scenario persona notes, canary injection | Pending |
-| 7 | LLM integration + SSE streaming + deterministic filters: openai-go wrapper, `POST /api/chat` with filter hooks, input blocklist, output blocklist, canary detection, CORS | Pending |
-| 8 | Observability: slog structured logging, request/response logging, alerting on filter hits | Pending |
-| 9 | Next.js app: chat UI, scenario selector, SSE consumption, handle provisional tokens and `blocked` events | Pending |
+| 5 | Session management: struct, store interface, in-memory impl, turn limits, token budget, sliding window, canary tokens | Done |
+| 6 | System prompt: Go template, markdown headers, per-scenario persona notes, canary injection | Done |
+| 7 | LLM integration + SSE streaming + deterministic filters: openai-go wrapper, `POST /api/chat` with filter hooks, input blocklist, output blocklist, canary detection, CORS | Done |
+| 8 | Observability: slog structured logging, request/response logging, alerting on filter hits | Done |
+| 9 | Next.js app: chat UI, scenario selector, SSE consumption, handle provisional tokens and `blocked` events | Done |
 | 10 | PII scrubbing: approach TBD (Go-native, Presidio sidecar, or deferred) | Pending |
 | 11 | Characterization tests: adversarial inputs against Go server API | Pending |
 
